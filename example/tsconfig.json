@@ -1,0 +1,10 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "@rbayuokt/expo-infinite-media": ["../src/index"],
+      "@rbayuokt/expo-infinite-media/*": ["../src/*"]
+    }
+  }
+}

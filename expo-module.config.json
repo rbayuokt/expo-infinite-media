@@ -1,0 +1,9 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["ExpoInfiniteMediaModule"]
+  },
+  "android": {
+    "modules": ["expo.modules.infinitemedia.ExpoInfiniteMediaModule"]
+  }
+}

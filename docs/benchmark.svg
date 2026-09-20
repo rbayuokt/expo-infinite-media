@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 530" width="780" height="530" role="img" aria-label="Benchmark results for Android and iOS: time to first frame, stall time and network traffic, on a cold and a warm cache">
+  <style>
+    .bg { fill: #07070B; }
+    .t { font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    .title { fill: #F4F4F6; font-size: 16px; font-weight: 700; }
+    .sub { fill: #6E6E7C; font-size: 12.5px; }
+    .panel { fill: #F4F4F6; font-size: 13px; font-weight: 700; }
+    .unit { fill: #6E6E7C; font-size: 11.5px; }
+    .row { fill: #9A9AA8; font-size: 12px; }
+    .val { fill: #F4F4F6; font-size: 12px; font-weight: 700; }
+    .axis { stroke: #2A2A36; stroke-width: 1; }
+    .legend { fill: #9A9AA8; font-size: 12px; }
+  </style>
+
+  <rect class="bg" width="780" height="530" rx="14" />
+  <text class="t title" x="24" y="34">One 60 second run, 1200 items, release builds</text>
+  <text class="t sub" x="24" y="54">OPPO Reno5 F on Android 13, iPhone 11 Pro on iOS 26.2, same Wi-Fi and media. Lower is better.</text>
+
+  <rect x="556" y="24" width="10" height="10" rx="3" fill="#6F9A1C" />
+  <text class="t legend" x="572" y="33">Android</text>
+  <rect x="646" y="24" width="10" height="10" rx="3" fill="#6F5BE0" />
+  <text class="t legend" x="662" y="33">iOS</text>
+
+  <!-- panel 1: TTFF p90, max 5 -->
+  <text class="t panel" x="24" y="96">Time to first frame, p90</text>
+  <text class="t unit" x="182" y="96">milliseconds after landing on a post. Every run is under 5 ms.</text>
+  <line class="axis" x1="130" y1="104" x2="130" y2="200" />
+
+  <text class="t row" x="24" y="122">Android, cold</text>
+  <rect x="130" y="110" width="104" height="16" rx="4" fill="#6F9A1C" />
+  <text class="t val" x="242" y="123">1</text>
+
+  <text class="t row" x="24" y="146">Android, warm</text>
+  <rect x="130" y="134" width="104" height="16" rx="4" fill="#6F9A1C" />
+  <text class="t val" x="242" y="147">1</text>
+
+  <text class="t row" x="24" y="170">iOS, cold</text>
+  <rect x="130" y="158" width="520" height="16" rx="4" fill="#6F5BE0" />
+  <text class="t val" x="658" y="171">5</text>
+
+  <text class="t row" x="24" y="194">iOS, warm</text>
+  <rect x="130" y="182" width="3" height="16" rx="1.5" fill="#6F5BE0" />
+  <text class="t val" x="141" y="195">0</text>
+
+  <!-- panel 2: stall time, max 494 -->
+  <text class="t panel" x="24" y="250">Stall time in the minute</text>
+  <text class="t unit" x="182" y="250">milliseconds, every rebuffer added up. One rebuffer in four runs.</text>
+  <line class="axis" x1="130" y1="258" x2="130" y2="354" />
+
+  <text class="t row" x="24" y="276">Android, cold</text>
+  <rect x="130" y="264" width="3" height="16" rx="1.5" fill="#6F9A1C" />
+  <text class="t val" x="141" y="277">0</text>
+
+  <text class="t row" x="24" y="300">Android, warm</text>
+  <rect x="130" y="288" width="3" height="16" rx="1.5" fill="#6F9A1C" />
+  <text class="t val" x="141" y="301">0</text>
+
+  <text class="t row" x="24" y="324">iOS, cold</text>
+  <rect x="130" y="312" width="520" height="16" rx="4" fill="#6F5BE0" />
+  <text class="t val" x="658" y="325">494</text>
+
+  <text class="t row" x="24" y="348">iOS, warm</text>
+  <rect x="130" y="336" width="3" height="16" rx="1.5" fill="#6F5BE0" />
+  <text class="t val" x="141" y="349">0</text>
+
+  <!-- panel 3: network total, max 131.7 -->
+  <text class="t panel" x="24" y="404">Pulled over the network</text>
+  <text class="t unit" x="192" y="404">megabytes for 13 posts, playback and preload together</text>
+  <line class="axis" x1="130" y1="412" x2="130" y2="508" />
+
+  <text class="t row" x="24" y="430">Android, cold</text>
+  <rect x="130" y="418" width="520" height="16" rx="4" fill="#6F9A1C" />
+  <text class="t val" x="658" y="431">131.7</text>
+
+  <text class="t row" x="24" y="454">Android, warm</text>
+  <rect x="130" y="442" width="17" height="16" rx="4" fill="#6F9A1C" />
+  <text class="t val" x="155" y="455">4.4</text>
+
+  <text class="t row" x="24" y="478">iOS, cold</text>
+  <rect x="130" y="466" width="422" height="16" rx="4" fill="#6F5BE0" />
+  <text class="t val" x="560" y="479">106.8</text>
+
+  <text class="t row" x="24" y="502">iOS, warm</text>
+  <rect x="130" y="490" width="3" height="16" rx="1.5" fill="#6F5BE0" />
+  <text class="t val" x="141" y="503">0.0</text>
+</svg>

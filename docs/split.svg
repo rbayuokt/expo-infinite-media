@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 400" width="780" height="400" role="img" aria-label="What JavaScript owns and what native owns">
+  <style>
+    .bg { fill: #07070B; }
+    .panel { fill: #16161E; stroke: #2A2A36; stroke-width: 1; }
+    .panel-native { fill: #14180E; stroke: #C8FF3D; stroke-width: 1.5; }
+    .t { font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    .head { fill: #F4F4F6; font-size: 14px; font-weight: 800; letter-spacing: 0.4px; }
+    .head-native { fill: #C8FF3D; font-size: 14px; font-weight: 800; letter-spacing: 0.4px; }
+    .row { fill: #D6D6DE; font-size: 13.5px; }
+    .note { fill: #6E6E7C; font-size: 11.5px; }
+    .arrow { stroke: #6E6E7C; stroke-width: 1.5; fill: none; }
+    .arrow-label { fill: #9A9AA8; font-size: 11.5px; }
+    .title { fill: #F4F4F6; font-size: 16px; font-weight: 700; }
+    .sub { fill: #6E6E7C; font-size: 13px; }
+  </style>
+
+  <rect class="bg" width="780" height="400" rx="14" />
+  <text class="t title" x="24" y="38">Who does what</text>
+  <text class="t sub" x="24" y="60">A swipe sends one event to JavaScript, not sixty frames.</text>
+
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#6E6E7C" />
+    </marker>
+  </defs>
+
+  <!-- JS panel -->
+  <rect class="panel" x="24" y="84" width="286" height="252" rx="12" />
+  <text class="t head" x="44" y="114">YOUR JAVASCRIPT</text>
+  <text class="t row" x="44" y="148">the list of items</text>
+  <text class="t note" x="44" y="166">id, uri, poster, your own fields</text>
+  <text class="t row" x="44" y="200">your overlays</text>
+  <text class="t note" x="44" y="218">plain React: captions, buttons</text>
+  <text class="t row" x="44" y="252">commands when you want them</text>
+  <text class="t note" x="44" y="270">play, pause, seekTo, scrollToIndex</text>
+  <text class="t row" x="44" y="304">a few events back</text>
+  <text class="t note" x="44" y="322">onIndexChange, onError, onMetrics</text>
+
+  <!-- arrows -->
+  <path class="arrow" d="M318 168 L454 168" marker-end="url(#a)" />
+  <text class="t arrow-label" x="324" y="158">items, commands</text>
+  <path class="arrow" d="M454 272 L318 272" marker-end="url(#a)" />
+  <text class="t arrow-label" x="324" y="262">one event per page</text>
+
+  <!-- native panel -->
+  <rect class="panel-native" x="462" y="84" width="294" height="252" rx="12" />
+  <text class="t head-native" x="482" y="114">NATIVE</text>
+  <text class="t note" x="482" y="132">AVFoundation on iOS, Media3 on Android</text>
+  <text class="t row" x="482" y="166">watches the scroll itself</text>
+  <text class="t note" x="482" y="184">picks the post on screen, no JS needed</text>
+  <text class="t row" x="482" y="218">owns the players</text>
+  <text class="t note" x="482" y="236">one playing, one warmed up, three max</text>
+  <text class="t row" x="482" y="270">schedules the bytes</text>
+  <text class="t note" x="482" y="288">preload, cancel, bounded disk cache</text>
+  <text class="t row" x="482" y="322">decodes images to the size shown</text>
+
+  <text class="t sub" x="24" y="372">A busy render or a slow API call happens on the left. Playback lives on the right.</text>
+</svg>

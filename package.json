@@ -1,0 +1,99 @@
+{
+  "name": "@rbayuokt/expo-infinite-media",
+  "version": "0.1.0",
+  "description": "Native paged media feed for Expo and React Native CLI. Vertical or horizontal paging of mixed video and images, with pooled players, predictive preloading and bounded caching. AVFoundation on iOS, Media3 on Android.",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "scripts": {
+    "build": "node internal/module_scripts/build.js",
+    "clean": "node internal/module_scripts/clean.js",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit",
+    "test": "node internal/module_scripts/test.js",
+    "test:ios": "sh internal/module_scripts/test-ios-core.sh",
+    "test:android": "cd example/android && ./gradlew :rbayuokt-expo-infinite-media:testDebugUnitTest",
+    "example:ios": "npm install --prefix example && npm --prefix example run ios",
+    "example:android": "npm install --prefix example && npm --prefix example run android",
+    "example:prebuild": "npm --prefix example run prebuild",
+    "prepare": "node internal/module_scripts/prepare.js",
+    "open:ios": "node internal/module_scripts/open-ios.js",
+    "open:android": "node internal/module_scripts/open-android.js"
+  },
+  "keywords": [
+    "video feed",
+    "reels",
+    "shorts",
+    "tiktok",
+    "vertical video",
+    "horizontal paging",
+    "infinite scroll",
+    "media feed",
+    "video preload",
+    "video cache",
+    "exoplayer",
+    "media3",
+    "avfoundation",
+    "avplayer",
+    "react-native",
+    "expo",
+    "expo-modules",
+    "ios",
+    "android",
+    "expo-infinite-media"
+  ],
+  "repository": "https://github.com/rbayuokt/expo-infinite-media",
+  "bugs": {
+    "url": "https://github.com/rbayuokt/expo-infinite-media/issues"
+  },
+  "author": "rbayuokt <rizkybayuoktavian@gmail.com> (https://github.com/rbayuokt)",
+  "license": "MIT",
+  "homepage": "https://github.com/rbayuokt/expo-infinite-media#readme",
+  "devDependencies": {
+    "@babel/core": "^7.26.0",
+    "@types/jest": "^29.2.1",
+    "@types/react": "~19.1.1",
+    "babel-preset-expo": "~55.0.8",
+    "eslint": "~9.39.4",
+    "eslint-config-universe": "^15.0.3",
+    "expo": "^55.0.31",
+    "jest": "^29.7.0",
+    "jest-expo": "~55.0.9",
+    "prettier": "^3.0.0",
+    "react-native": "0.83.10",
+    "react-native-gesture-handler": "~2.30.0",
+    "react-native-reanimated": "~4.2.1",
+    "react-native-worklets": "^0.7.4",
+    "typescript": "^5.9.2"
+  },
+  "jest": {
+    "preset": "jest-expo",
+    "roots": [
+      "<rootDir>/src"
+    ]
+  },
+  "peerDependencies": {
+    "expo": "*",
+    "react": "*",
+    "react-native": "*",
+    "react-native-reanimated": ">=4.0.0",
+    "react-native-gesture-handler": ">=2.20.0"
+  },
+  "exports": {
+    ".": {
+      "types": "./build/index.d.ts",
+      "default": "./build/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependenciesMeta": {
+    "react-native-reanimated": {
+      "optional": true
+    },
+    "react-native-gesture-handler": {
+      "optional": true
+    }
+  }
+}
