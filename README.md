@@ -324,6 +324,39 @@ npx expo install react-native-reanimated react-native-gesture-handler
 Reanimated needs its Babel plugin, and the app has to be wrapped in
 `GestureHandlerRootView`. The example does both.
 
+## Hold to speed up
+
+`speed` makes holding anywhere on the feed play faster, and releasing go back to normal.
+Both changes ease rather than jump.
+
+```tsx
+<InfiniteMediaFeed
+  data={items}
+  speed={{ rate: 2, holdDelay: 250 }}
+  onRateChange={({ rate }) => setFast(rate !== 1)}
+/>
+```
+
+`speed` takes `true` for the defaults, or an options object: `rate` (2), `holdDelay`
+(250 ms), `rampMs` (150 ms), `showIndicator`, `label`, `indicatorStyle`,
+`indicatorTextStyle`, `renderIndicator`, and `bottom` or `top` to place the indicator
+yourself. By default it sits under the seek bar, and follows the bar when that is pinned
+to the top instead.
+
+Details worth knowing:
+
+- **The rate is eased in native code**, in 16 ms steps across `rampMs`. A hard jump to 2x
+  reads as a glitch, so both the press and the release ramp.
+- **Movement cancels the hold**, so swiping to the next post still wins over holding.
+- **Audio keeps its pitch.** iOS needs `audioTimePitchAlgorithm` for that, Android corrects
+  pitch already.
+- **Holding a paused video leaves it paused.** On iOS a non-zero rate would otherwise start
+  playback.
+- `setRate(rate, rampMs)` on the ref does the same thing without the gesture, for apps that
+  want their own control.
+
+It needs `react-native-gesture-handler`, and is skipped with a warning without it.
+
 ## Preloading
 
 One policy decides what happens to the items around the current one. It's a pure
@@ -472,6 +505,7 @@ How retries work:
 | `progressInterval`      | `0`                       | ms between `onProgress` events for the current video, minimum 250. `0` is off |
 | `diagnostics`           | `false`                   | Emits `onMetrics` every 2 s                                                   |
 | `scrubber`              | off                       | `true` or options for the seek bar. See Seek bar                              |
+| `speed`                 | off                       | `true` or options for hold to speed up. See Hold to speed up                  |
 | `onEndReachedThreshold` | `3`                       | Pages from the end                                                            |
 | `backgroundColor`       | `'#000'`                  | Also what a page not mounted yet shows                                        |
 | `style`                 |                           |                                                                               |
@@ -488,9 +522,10 @@ Events:
 | `onEndReached()`                                                | Once per data length, so appending can trigger it again                                                                     |
 | `onSeek({ itemId, position })`                                  | Each seek from the scrubber, live ones included                                                                             |
 | `onScrubStart({ itemId })` / `onScrubEnd({ itemId, position })` | The drag started and ended                                                                                                  |
+| `onRateChange({ rate })`                                        | The playback rate changed, `1` is normal                                                                                    |
 | `onMetrics(metrics)`                                            | Only with `diagnostics`                                                                                                     |
 
-Ref: `play()`, `pause()`, `seekTo(seconds)`, `setMuted(muted)`,
+Ref: `play()`, `pause()`, `seekTo(seconds)`, `setRate(rate, rampMs?)`, `setMuted(muted)`,
 `scrollToIndex(index, animated = true)`, `retry()`.
 
 ### Data changes
