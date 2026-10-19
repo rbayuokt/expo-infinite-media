@@ -52,6 +52,7 @@ export declare class FeedSession extends SharedObject<SessionEvents> {
   pause(): void;
   /** `precise: false` lands on the nearest keyframe, which is what scrubbing wants. */
   seekTo(seconds: number, precise?: boolean): void;
+  setRate(rate: number, rampMs?: number): void;
   setMuted(muted: boolean): void;
   retry(): void;
 }

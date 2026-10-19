@@ -95,7 +95,7 @@ enum PreloadPolicy {
       case 1:
         if unhealthy {
           add(i, .p1, .poster, .none)
-        } else if flinging || constrained {
+        } else if flinging || input.memory == .pressure || input.network == .constrained {
           add(i, .p1, .startup, .fetch)
         } else {
           add(i, .p1, .prepare, .decode)
@@ -115,7 +115,8 @@ enum PreloadPolicy {
 
     if input.behind > 0 && !flinging {
       let i = current - dir
-      let warmPrev = input.tier == .high && input.memory == .normal && !unhealthy
+      let warmPrev = input.tier != .low && input.memory == .normal && !unhealthy
+        && input.network != .constrained
       add(i, .p3, warmPrev ? .prepare : .poster, constrained ? .none : .decode)
     }
 

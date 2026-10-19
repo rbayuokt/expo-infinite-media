@@ -47,6 +47,8 @@ internal class ItemPlayback(
 
   /** When the item last became active, for time to first frame. */
   var activatedAt = 0L
+  private val main = android.os.Handler(android.os.Looper.getMainLooper())
+  private var rateRamp: Runnable? = null
 
   fun start(source: MediaSource?) {
     player.addListener(this)
@@ -75,6 +77,29 @@ internal class ItemPlayback(
   }
 
   /** Only the active item gets volume and audio focus. A muted feed doesn't take focus. */
+  fun setRate(target: Float, rampMs: Int) {
+    rateRamp?.let(main::removeCallbacks)
+    rateRamp = null
+    val from = player.playbackParameters.speed
+    val steps = (rampMs / 16).coerceAtLeast(1)
+    if (rampMs <= 0 || steps <= 1 || kotlin.math.abs(target - from) < 0.01f) {
+      player.setPlaybackSpeed(target)
+      return
+    }
+    var step = 0
+    val tick = object : Runnable {
+      override fun run() {
+        step++
+        val t = (step.toFloat() / steps).coerceAtMost(1f)
+        player.setPlaybackSpeed(from + (target - from) * t)
+        if (t < 1f) main.postDelayed(this, 16)
+        else rateRamp = null
+      }
+    }
+    rateRamp = tick
+    main.postDelayed(tick, 16)
+  }
+
   fun setActive(value: Boolean, muted: Boolean, loop: Boolean) {
     active = value
     val audible = value && !muted
@@ -101,6 +126,8 @@ internal class ItemPlayback(
 
   /** Stops callbacks, detaches the surface, hands the player back. Idempotent. */
   fun release(recycle: (ExoPlayer) -> Unit) {
+    rateRamp?.let(main::removeCallbacks)
+    rateRamp = null
     if (released) return
     move(PlaybackEvent.RELEASE)
     released = true

@@ -108,6 +108,10 @@ class ExpoInfiniteMediaModule : Module() {
       Function("seekTo") { s: FeedSession, seconds: Double, precise: Boolean? ->
         onMain { s.seekTo(seconds, precise ?: true) }
       }
+
+      Function("setRate") { s: FeedSession, rate: Double, rampMs: Int? ->
+        onMain { s.setRate(rate, rampMs ?: 150) }
+      }
       Function("setMuted") { s: FeedSession, muted: Boolean -> onMain { s.setMuted(muted) } }
       Function("retry") { s: FeedSession -> onMain { s.retry() } }
     }
@@ -136,6 +140,13 @@ class ExpoInfiniteMediaModule : Module() {
         }
       }
       return
+    }
+    item.poster?.let { poster ->
+      withContext(Dispatchers.Main) {
+        Coordinator.images.prefetch(
+          "preload-poster:${item.id}", poster, item.posterCacheKey, item.headers, false, 0, 0
+        )
+      }
     }
     // Streams aren't byte-range cached, the player warms them when they get close.
     if (!item.isProgressive) return

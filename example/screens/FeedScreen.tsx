@@ -172,6 +172,7 @@ export function FeedScreen({
               ? { top: insets.top + 52, ...preset.scrubber }
               : { bottom: insets.bottom + 8, ...preset.scrubber }
         }
+        speed
         renderOverlay={preset.overlay === 'none' ? undefined : renderOverlay}
         onEndReached={loadMore}
         onIndexChange={({ index: i }) => setIndex(i)}

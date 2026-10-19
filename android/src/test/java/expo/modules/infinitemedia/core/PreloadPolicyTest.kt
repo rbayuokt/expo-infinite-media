@@ -15,9 +15,9 @@ class PreloadPolicyTest {
     assertEquals(PlanEntry(100, Priority.P0, VideoAction.PLAY, ImageAction.DISPLAY), p.entry(100))
     assertEquals(PlanEntry(101, Priority.P1, VideoAction.PREPARE, ImageAction.DECODE), p.entry(101))
     assertEquals(PlanEntry(102, Priority.P2, VideoAction.STARTUP, ImageAction.FETCH), p.entry(102))
-    assertEquals(PlanEntry(99, Priority.P3, VideoAction.POSTER, ImageAction.DECODE), p.entry(99))
+    assertEquals(PlanEntry(99, Priority.P3, VideoAction.PREPARE, ImageAction.DECODE), p.entry(99))
     assertEquals(4, p.entries.size)
-    assertEquals(1, p.preparedCount)
+    assertEquals(2, p.preparedCount)
     // Sorted by priority.
     assertEquals(listOf(100, 101, 102, 99), p.entries.map { it.index })
   }
@@ -75,9 +75,11 @@ class PreloadPolicyTest {
   }
 
   @Test fun tiers() {
-    assertEquals(0, plan(at(10).copy(tier = DeviceTier.LOW)).preparedCount)
     val low = plan(at(10).copy(tier = DeviceTier.LOW))
+    assertEquals(VideoAction.PREPARE, low.entry(11)!!.video)
+    assertEquals(VideoAction.POSTER, low.entry(9)!!.video)
     assertEquals(VideoAction.POSTER, low.entry(12)!!.video)
+    assertEquals(1, low.preparedCount)
     val high = plan(at(10).copy(tier = DeviceTier.HIGH))
     assertEquals(VideoAction.PREPARE, high.entry(9)!!.video)
     assertEquals(2, high.preparedCount)

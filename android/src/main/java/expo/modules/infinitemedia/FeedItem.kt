@@ -19,6 +19,8 @@ internal class FeedItem(
   /** What caches are keyed by. */
   val key: String = cacheKey ?: id
 
+  val posterCacheKey: String get() = "$key#poster"
+
   /** Plain files. HLS and DASH can't take a custom cache key or a byte-range pre-cache. */
   val isProgressive: Boolean by lazy { Util.inferContentType(Uri.parse(uri)) == C.CONTENT_TYPE_OTHER }
 

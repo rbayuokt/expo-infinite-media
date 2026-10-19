@@ -15,9 +15,9 @@ final class PreloadPolicyTests: XCTestCase {
     XCTAssertEqual(p.entry(101), PlanEntry(index: 101, priority: .p1, video: .prepare, image: .decode))
     XCTAssertEqual(p.entry(102), PlanEntry(index: 102, priority: .p2, video: .startup, image: .fetch))
     XCTAssertEqual(p.entry(99)?.priority, .p3)
-    XCTAssertEqual(p.entry(99)?.video, .poster)
+    XCTAssertEqual(p.entry(99)?.video, .prepare)
     XCTAssertNil(p.entry(103))
-    XCTAssertEqual(p.preparedCount, 1)
+    XCTAssertEqual(p.preparedCount, 2)
   }
 
   func testFastFlingPreparesNothing() {
@@ -73,7 +73,9 @@ final class PreloadPolicyTests: XCTestCase {
 
   func testLowTier() {
     let p = plan(3) { $0.tier = .low }
-    XCTAssertEqual(p.preparedCount, 0)
+    XCTAssertEqual(p.entry(4)?.video, .prepare)
+    XCTAssertEqual(p.entry(2)?.video, .poster)
+    XCTAssertEqual(p.preparedCount, 1)
     XCTAssertEqual(p.entry(5)?.video, .poster)
   }
 

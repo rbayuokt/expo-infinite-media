@@ -61,6 +61,7 @@ class FeedSession(appContext: AppContext) : SharedObject(appContext) {
   private var userPaused = false
   private var resumeItem: String? = null
   private var lastState: String? = null
+  private var lastStateId: String? = null
   private var lastPlan: PreloadPlan? = null
 
   private var bufferHealthy = true
@@ -139,6 +140,10 @@ class FeedSession(appContext: AppContext) : SharedObject(appContext) {
    * Exact seeks decode from the previous keyframe, too much work to repeat while a finger is
    * dragging, so scrubbing asks for the nearest sync point instead.
    */
+  internal fun setRate(rate: Double, rampMs: Int) {
+    current()?.setRate(rate.toFloat(), rampMs)
+  }
+
   internal fun seekTo(seconds: Double, precise: Boolean) {
     val player = current()?.player ?: return
     player.setSeekParameters(if (precise) SeekParameters.EXACT else SeekParameters.CLOSEST_SYNC)
@@ -232,7 +237,7 @@ class FeedSession(appContext: AppContext) : SharedObject(appContext) {
         slot.imageRequest = c.images.displayDetached(
           slot.imageView,
           poster,
-          posterKey(item),
+          item.posterCacheKey,
           item.headers,
           0,
           0,
@@ -320,6 +325,7 @@ class FeedSession(appContext: AppContext) : SharedObject(appContext) {
     landingId = id
     userPaused = false
     lastState = null
+    lastStateId = null
     resumeItem = null
     prev?.let { playbacks[it] }?.setActive(false, true, config.loop)
     val index = indexById[id] ?: return
@@ -445,7 +451,7 @@ class FeedSession(appContext: AppContext) : SharedObject(appContext) {
         c.images.prefetch(item.id, item.uri, item.key, item.headers, e.image == ImageAction.DECODE, w, h)
         keep.add(item.id)
       } else if (item.isVideo && item.poster != null && e.video != VideoAction.NONE) {
-        val id = posterKey(item)
+        val id = item.posterCacheKey
         c.images.prefetch(id, item.poster, id, item.headers, true, w, h)
         keep.add(id)
       }
@@ -729,8 +735,10 @@ class FeedSession(appContext: AppContext) : SharedObject(appContext) {
 
   private fun emitState(pb: ItemPlayback) {
     val name = pb.state.publicName ?: return
-    if (name == lastState) return
+    if (pb.item.id != currentId) return
+    if (name == lastState && pb.item.id == lastStateId) return
     lastState = name
+    lastStateId = pb.item.id
     emit("playbackStateChange", mapOf("itemId" to pb.item.id, "state" to name))
   }
 
@@ -746,7 +754,6 @@ class FeedSession(appContext: AppContext) : SharedObject(appContext) {
     items.forEach { if (it.isVideo) c.videoCache.register(it) }
   }
 
-  private fun posterKey(item: FeedItem) = "${item.key}#poster"
 
   internal fun release() {
     if (released) return

@@ -118,8 +118,9 @@ internal class Environment(private val ctx: Context, private val onChange: (reco
 
   private fun baseTier(): DeviceTier {
     val am = ctx.getSystemService(ActivityManager::class.java) ?: return DeviceTier.MID
-    if (am.isLowRamDevice || am.memoryClass <= 192) return DeviceTier.LOW
     val info = ActivityManager.MemoryInfo().also { am.getMemoryInfo(it) }
+    if (am.isLowRamDevice) return DeviceTier.LOW
+    if (am.memoryClass <= 192 && info.totalMem < 3L * 1024 * 1024 * 1024) return DeviceTier.LOW
     return if (am.memoryClass >= 512 && info.totalMem >= 6L * 1024 * 1024 * 1024) DeviceTier.HIGH else DeviceTier.MID
   }
 

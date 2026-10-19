@@ -22,6 +22,8 @@ final class VideoHandle {
     didSet { playerItem?.preferredForwardBufferDuration = isCurrent ? Self.currentBuffer : Self.preparedBuffer }
   }
   var loop = true
+  private(set) var rate: Float = 1
+  private var rateRamp: Timer?
   var attempt = 0
   var evictedForCorruption = false
   var firstFrameRendered = false
@@ -61,10 +63,12 @@ final class VideoHandle {
     switch state {
     case .ready, .paused:
       player.play()
+      player.rate = rate
       transition(.play)
     case .ended:
       player.seek(to: .zero)
       player.play()
+      player.rate = rate
       transition(.play)
     default:
       break
@@ -78,6 +82,36 @@ final class VideoHandle {
   }
 
   func setMuted(_ muted: Bool) { player.isMuted = muted }
+
+  func setRate(_ target: Float, rampMs: Int) {
+    rateRamp?.invalidate()
+    rateRamp = nil
+    let from = rate
+    let steps = max(1, rampMs / 16)
+    guard rampMs > 0, abs(target - from) > 0.01, steps > 1 else {
+      applyRate(target)
+      return
+    }
+    var step = 0
+    rateRamp = Timer.scheduledTimer(withTimeInterval: 0.016, repeats: true) { [weak self] timer in
+      guard let self else {
+        timer.invalidate()
+        return
+      }
+      step += 1
+      let t = min(1, Float(step) / Float(steps))
+      self.applyRate(from + (target - from) * t)
+      if t >= 1 {
+        timer.invalidate()
+        self.rateRamp = nil
+      }
+    }
+  }
+
+  private func applyRate(_ value: Float) {
+    rate = value
+    if state == .playing { player.rate = value }
+  }
 
   /**
    Precise seeks decode from the previous keyframe, which is far too much work to repeat
@@ -116,6 +150,8 @@ final class VideoHandle {
 
   func release() {
     guard state != .releasing else { return }
+    rateRamp?.invalidate()
+    rateRamp = nil
     pendingSeek = nil
     transition(.release)
     teardownItem()
@@ -171,6 +207,7 @@ final class VideoHandle {
     fromCache = made.fromCache
     let item = AVPlayerItem(asset: made.asset)
     item.preferredForwardBufferDuration = isCurrent ? Self.currentBuffer : Self.preparedBuffer
+    item.audioTimePitchAlgorithm = .timeDomain
     playerItem = item
     observe(item)
     player.replaceCurrentItem(with: item)

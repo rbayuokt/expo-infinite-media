@@ -116,6 +116,8 @@ final class FeedSession: SharedObject {
 
   func seek(to seconds: Double, precise: Bool) { currentHandle?.seek(to: seconds, precise: precise) }
 
+  func setRate(_ rate: Double, rampMs: Int) { currentHandle?.setRate(Float(rate), rampMs: rampMs) }
+
   func setMuted(_ muted: Bool) {
     config.muted = muted
     if let handle = currentHandle { applyAudio(handle) }
