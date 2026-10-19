@@ -1,7 +1,7 @@
 {
   "name": "@rbayuokt/expo-infinite-media",
   "version": "0.2.0",
-  "description": "Native paged media feed for Expo and React Native CLI. Vertical or horizontal paging of mixed video and images, with pooled players, predictive preloading and bounded caching. AVFoundation on iOS, Media3 on Android.",
+  "description": "Native paged media feed for Expo and React Native CLI. Vertical or horizontal paging of mixed video and images, with pooled players, predictive preloading and bounded caching. AVFoundation on iOS, Media3 on Android, pooled <video> and scroll snap on the web.",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "scripts": {
