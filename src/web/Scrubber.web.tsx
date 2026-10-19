@@ -5,7 +5,6 @@ import type { ScrubberOptions } from '../types';
 type Props = {
   options: ScrubberOptions;
   hidden: boolean;
-  /** Reads straight off the element, so the bar never waits on React state. */
   element: () => HTMLVideoElement | undefined;
   onSeek: (seconds: number) => void;
   onScrubStart: () => void;
@@ -17,11 +16,6 @@ const clock = (s: number) => {
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
 };
 
-/**
- * The web seek bar. Reanimated's frame callback does not run here, so the native scrubber
- * would render but never move. This one animates from `requestAnimationFrame` and writes
- * widths straight to the DOM, which keeps React out of the per-frame path the same way.
- */
 export function WebScrubber({ options, hidden, element, onSeek, onScrubStart, onScrubEnd }: Props) {
   const height = options.height ?? 3;
   const expanded = options.expandedHeight ?? 8;
@@ -47,7 +41,8 @@ export function WebScrubber({ options, hidden, element, onSeek, onScrubStart, on
           const end = el.buffered.end(el.buffered.length - 1);
           buffered.current.style.width = `${Math.min(1, end / el.duration) * 100}%`;
         }
-        if (label.current) label.current.textContent = `${clock(el.currentTime)} / ${clock(el.duration)}`;
+        if (label.current)
+          label.current.textContent = `${clock(el.currentTime)} / ${clock(el.duration)}`;
       }
       raf = requestAnimationFrame(tick);
     };

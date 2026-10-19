@@ -8,22 +8,20 @@ import React, {
   useState,
   type Ref,
 } from 'react';
-
 import { StyleSheet, View } from 'react-native';
 
 import { clampIndex, mountWindow, shouldFireEndReached } from './core/window';
-import { WebMetrics } from './web/metrics';
-import { WebScrubber } from './web/Scrubber.web';
-import { Slot } from './web/Slot.web';
-import { VideoPool } from './web/pool';
 import type {
   InfiniteMediaFeedProps,
   InfiniteMediaFeedRef,
   InfiniteMediaItem,
   ScrubberOptions,
 } from './types';
+import { WebScrubber } from './web/Scrubber.web';
+import { Slot } from './web/Slot.web';
+import { WebMetrics } from './web/metrics';
+import { VideoPool } from './web/pool';
 
-/** Current, next and previous, the same window the native policy keeps warm. */
 const POOL_SIZE = 3;
 
 export function InfiniteMediaFeed<T extends InfiniteMediaItem>(
@@ -67,7 +65,6 @@ export function InfiniteMediaFeed<T extends InfiniteMediaItem>(
     if (!diagnostics || !props.onMetrics) return;
     const id = setInterval(() => props.onMetrics?.(metrics.sample(pool)), 2000);
     return () => clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [diagnostics, metrics, pool]);
 
   const scrubberOptions: ScrubberOptions | null = useMemo(
@@ -87,18 +84,6 @@ export function InfiniteMediaFeed<T extends InfiniteMediaItem>(
     return ids;
   }, [data, index]);
 
-  // The browser owns the scroll position, so an initial index is a scroll, not a state.
-  // Without this the observer would report page 0 and drag the feed back to the top.
-  const landed = useRef(false);
-  useLayoutEffect(() => {
-    if (landed.current || !scroller.current || !data.length) return;
-    landed.current = true;
-    const target = clampIndex(initialIndex, data.length);
-    if (target > 0) scrollTo(target, false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data.length]);
-
-  // The browser reports which page is on screen, so no scroll handler runs in JS.
   useEffect(() => {
     const root = scroller.current;
     if (!root) return;
@@ -119,7 +104,6 @@ export function InfiniteMediaFeed<T extends InfiniteMediaItem>(
     );
     root.querySelectorAll('[data-index]').forEach((el) => io.observe(el));
     return () => io.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, pages.join(',')]);
 
   useEffect(() => {
@@ -130,10 +114,8 @@ export function InfiniteMediaFeed<T extends InfiniteMediaItem>(
       endReachedAt.current = data.length;
       props.onEndReached?.();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, data.length, onEndReachedThreshold]);
 
-  // Progress for the seek bar and onProgress, read off the element rather than pushed.
   useEffect(() => {
     if (!progressInterval || !current) return;
     const id = setInterval(
@@ -150,7 +132,6 @@ export function InfiniteMediaFeed<T extends InfiniteMediaItem>(
       Math.max(250, progressInterval)
     );
     return () => clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [current?.id, progressInterval]);
 
   const scrollTo = useCallback(
@@ -165,6 +146,14 @@ export function InfiniteMediaFeed<T extends InfiniteMediaItem>(
     },
     [horizontal]
   );
+
+  const landed = useRef(false);
+  useLayoutEffect(() => {
+    if (landed.current || !scroller.current || !data.length) return;
+    landed.current = true;
+    const target = clampIndex(initialIndex, data.length);
+    if (target > 0) scrollTo(target, false);
+  }, [data.length]);
 
   const applyRate = useCallback(
     (value: number, rampMs: number) => {
@@ -185,7 +174,7 @@ export function InfiniteMediaFeed<T extends InfiniteMediaItem>(
       };
       requestAnimationFrame(step);
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
     [current?.id]
   );
 
@@ -219,11 +208,10 @@ export function InfiniteMediaFeed<T extends InfiniteMediaItem>(
         }
       },
     }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
     [current?.id, data.length, scrollTo, applyRate]
   );
 
-  // Hold to speed up, with pointer events rather than a gesture library.
   const speedOptions = speed ? (speed === true ? {} : speed) : null;
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [fast, setFast] = useState(false);
@@ -243,7 +231,6 @@ export function InfiniteMediaFeed<T extends InfiniteMediaItem>(
     applyRate(1, speedOptions.rampMs ?? 150);
   };
 
-  // The first gesture is what lets the browser hand the page its sound back.
   const onPointerDown = () => {
     if (!muted) {
       const el = current ? pool.find(current.id)?.el : undefined;
@@ -260,7 +247,6 @@ export function InfiniteMediaFeed<T extends InfiniteMediaItem>(
       const el = current ? pool.find(current.id)?.el : undefined;
       el?.pause();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, current?.id]);
 
   return (
@@ -404,6 +390,5 @@ export function InfiniteMediaFeed<T extends InfiniteMediaItem>(
 
 const styles = StyleSheet.create({
   root: { flex: 1, minHeight: 0, position: 'relative' },
-  // Above the pages, so the bar keeps its touches while the feed scrolls.
   scrubber: { position: 'absolute', zIndex: 2 },
 });

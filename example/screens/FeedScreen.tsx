@@ -173,8 +173,6 @@ export function FeedScreen({
               : { bottom: insets.bottom + 8, ...preset.scrubber }
         }
         speed
-        // On a wide browser window a portrait video would crop to a torso, so the feed gets
-        // a phone shaped column the way video sites do. No effect on a phone.
         style={Platform.OS === 'web' ? { alignSelf: 'center', width: '100%', maxWidth: 460 } : undefined}
         renderOverlay={preset.overlay === 'none' ? undefined : renderOverlay}
         onEndReached={loadMore}

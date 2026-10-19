@@ -1,5 +1,37 @@
 # Changelog
 
+## 0.3.0
+
+### Added
+
+- **Web support.** The same import now resolves to a browser build with the same props,
+  the same ref and the same callbacks. Paging is CSS scroll snap with an
+  `IntersectionObserver` reporting the current page, so no scroll handler runs in JS.
+  See [Web](README.md#web).
+- **Three `<video>` elements serve a list of any length** on the web, current, next and
+  previous, the same window the native policy keeps warm. Pages outside it hold nothing.
+- **The seek bar and hold to speed up work in a browser.** The bar is a DOM bar driven by
+  `requestAnimationFrame`, since Reanimated's frame callback does not run on the web, and
+  holding uses pointer events. Both read the same options as on a phone.
+- **`diagnostics` emits `onMetrics` on the web** every 2 s, with startup times, rebuffers,
+  the decoder's dropped frames and the player counts. Byte and disk fields stay at zero.
+- Benchmarks for Chrome, cold and warm, alongside the two phones.
+
+### Changed
+
+- `preload()` warms posters on the web. `clearCache`, `removeFromCache` and `getCacheSize`
+  resolve without doing anything, because a page cannot reach the browser's HTTP cache.
+- Calls no longer throw `UNSUPPORTED_PLATFORM` on the web.
+
+### Notes
+
+- Per item `headers` are ignored on the web. A `<video src>` cannot carry them, so use
+  signed URLs or a query token.
+- Sound needs one gesture. Browsers refuse to autoplay with sound, so the feed falls back
+  to a muted start and turns the sound on at the first pointer down.
+- A phone sized feed in a desktop window wants a column. That is a style, not a prop, and
+  the README shows it.
+
 ## 0.2.0
 
 ### Added

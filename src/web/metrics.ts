@@ -9,11 +9,6 @@ const percentile = (values: number[], p: number) => {
   return Math.round(sorted[Math.min(sorted.length - 1, Math.floor((p / 100) * sorted.length))]);
 };
 
-/**
- * What the browser will actually tell you. Element state and the decoder's own dropped
- * frame count are real numbers; the HTTP cache size and the preload split are not visible
- * from a page, so those fields stay at zero rather than carrying a guess.
- */
 export class WebMetrics {
   private startups: number[] = [];
   private waitingSince = new Map<string, number>();
@@ -22,9 +17,7 @@ export class WebMetrics {
   private errors = 0;
 
   constructor() {
-    // The default ring holds 250 entries, and a long run would silently drop the oldest.
     performance.setResourceTimingBufferSize?.(5000);
-    // Counters belong to this feed, the way the native ones start at the session.
     performance.clearResourceTimings?.();
   }
 
@@ -66,8 +59,6 @@ export class WebMetrics {
     let misses = 0;
     for (const entry of performance.getEntriesByType('resource') as PerformanceResourceTiming[]) {
       if (!MEDIA.test(entry.name)) continue;
-      // A cross origin response without Timing-Allow-Origin reports every size as 0. That
-      // is opaque, not empty, so it is left out rather than counted as a free download.
       if (entry.transferSize === 0 && entry.decodedBodySize === 0 && entry.encodedBodySize === 0) {
         continue;
       }

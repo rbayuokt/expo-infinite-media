@@ -11,7 +11,6 @@ export type NativeItem = {
   cacheKey?: string;
 };
 
-/** Same shape the native module takes, so `index.ts` can stay platform agnostic. */
 export function toNativeItem(item: InfiniteMediaItem): NativeItem {
   const out: NativeItem = { id: item.id, type: item.type, uri: item.uri };
   if (item.poster) out.poster = item.poster;
@@ -20,11 +19,6 @@ export function toNativeItem(item: InfiniteMediaItem): NativeItem {
   return out;
 }
 
-/**
- * The web feed owns its own `<video>` elements, so there is no session object here. These
- * are the process-wide calls, mapped onto what a browser actually offers: posters can be
- * warmed, bytes and eviction belong to the browser's HTTP cache.
- */
 class ExpoInfiniteMediaModule extends NativeModule<{}> {
   FeedSession = class {};
 

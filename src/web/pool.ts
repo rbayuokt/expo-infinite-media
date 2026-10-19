@@ -3,17 +3,11 @@ export type PooledVideo = {
   itemId: string | null;
 };
 
-/**
- * A few `<video>` elements reused across the whole feed. Browsers cap how many videos can
- * decode at once, and mobile Safari caps it hard, so the count stays small and fixed rather
- * than one element per mounted page.
- */
 export class VideoPool {
   private slots: PooledVideo[] = [];
 
   constructor(readonly capacity: number) {}
 
-  /** The element already bound to this item, or a free one, or the least useful one. */
   take(itemId: string, keep: readonly string[]): PooledVideo {
     const mine = this.slots.find((s) => s.itemId === itemId);
     if (mine) return mine;

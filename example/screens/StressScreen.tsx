@@ -33,8 +33,6 @@ const MODES: { value: Mode; label: string }[] = [
 // the screen, which is how the benchmark rows in the README are produced.
 const ENV_MODE = process.env.EXPO_PUBLIC_STRESS_MODE;
 
-// A wide browser window would stretch a portrait feed, so the whole screen gets a phone
-// shaped column, panel included. No effect on a phone.
 const COLUMN: ViewStyle | null =
   Platform.OS === 'web' ? { alignSelf: 'center', width: '100%', maxWidth: 460 } : null;
 

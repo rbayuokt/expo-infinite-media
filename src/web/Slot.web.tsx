@@ -8,7 +8,6 @@ type Props = {
   uri: string;
   poster?: string;
   isVideo: boolean;
-  /** Current, prepared or neither. Only the current one plays. */
   role: 'current' | 'prepared' | 'none';
   pool: VideoPool;
   resizeMode: ResizeMode;
@@ -21,10 +20,6 @@ type Props = {
   onError: (itemId: string, message: string) => void;
 };
 
-/**
- * One page's media. The poster is an `<img>` that sits on top until the video has a frame,
- * which is the same trick the native slots use.
- */
 export function Slot(props: Props) {
   const { itemId, uri, poster, isVideo, role, pool, resizeMode, muted, loop, autoplay, keep } =
     props;
@@ -34,19 +29,13 @@ export function Slot(props: Props) {
 
   useEffect(() => {
     if (!isVideo || role === 'none' || !host.current) {
-      // A page that left the window keeps its element until the pool reuses it, so it has
-      // to be stopped here. Otherwise a jump leaves the old video playing off screen.
       pool.find(itemId)?.el.pause();
       return;
     }
-    // play() settles a tick later. By then this page can already be gone, and the retry
-    // below would start an element that no longer belongs to anyone.
     let cancelled = false;
     const slot = pool.take(itemId, keep);
     const el = slot.el;
     slot.itemId = itemId;
-    // Startup is counted from becoming current, the way the phones count it. A post that
-    // is only being prepared is downloading in the background and nobody is waiting on it.
     if (role === 'current') became.current = performance.now();
 
     Object.assign(el.style, {
@@ -65,8 +54,6 @@ export function Slot(props: Props) {
     }
     host.current.insertBefore(el, host.current.firstChild);
 
-    // Only the post you are looking at reports state, so a neighbour filling its buffer
-    // cannot put a spinner on screen or count as a stall.
     const report = (state: string) => {
       if (role === 'current') props.onState(itemId, state);
     };
@@ -97,8 +84,6 @@ export function Slot(props: Props) {
     if (role === 'current' && autoplay) {
       report('preparing');
       el.play().catch(() => {
-        // Browsers refuse autoplay with sound until the page has been touched, so fall
-        // back to a muted start and let the first gesture turn the sound back on.
         if (cancelled) return;
         if (el.muted) return report('paused');
         el.muted = true;
@@ -120,7 +105,6 @@ export function Slot(props: Props) {
       el.pause();
       if (el.parentElement === host.current) host.current?.removeChild(el);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [itemId, uri, isVideo, role, resizeMode, muted, loop, autoplay]);
 
   return (
