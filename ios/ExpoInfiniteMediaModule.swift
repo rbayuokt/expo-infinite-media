@@ -101,6 +101,10 @@ public class ExpoInfiniteMediaModule: Module {
         DispatchQueue.main.async { session.seek(to: seconds, precise: precise ?? true) }
       }
 
+      Function("setRate") { (session: FeedSession, rate: Double, rampMs: Int?) in
+        DispatchQueue.main.async { session.setRate(rate, rampMs: rampMs ?? 150) }
+      }
+
       Function("setMuted") { (session: FeedSession, muted: Bool) in
         DispatchQueue.main.async { session.setMuted(muted) }
       }

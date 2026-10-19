@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { StyleProp, ViewStyle } from 'react-native';
+import type { StyleProp, TextStyle, ViewStyle } from 'react-native';
 
 type ItemBase = {
   /** Stable identity. Players, caches and overlays are keyed by it. */
@@ -147,6 +147,27 @@ export type RenderOverlayInfo<T extends InfiniteMediaItem> = {
   isActive: boolean;
 };
 
+export type SpeedOptions = {
+  /** Rate while held. Default 2. */
+  rate?: number;
+  /** Hold this long before it kicks in, in ms. Default 250. */
+  holdDelay?: number;
+  /** Ease between rates over this long, in ms. Default 150. 0 switches instantly. */
+  rampMs?: number;
+  /** Small label while held. Default true. */
+  showIndicator?: boolean;
+  /** Indicator text. Default `2x`. */
+  label?: (rate: number) => string;
+  /** Replaces the built-in indicator entirely. */
+  renderIndicator?: (rate: number) => ReactNode;
+  indicatorStyle?: StyleProp<ViewStyle>;
+  indicatorTextStyle?: StyleProp<TextStyle>;
+  /** Space below the indicator. Defaults to sitting under the seek bar. */
+  bottom?: number;
+  /** Pins the indicator this far from the top instead. */
+  top?: number;
+};
+
 export type InfiniteMediaFeedProps<T extends InfiniteMediaItem = InfiniteMediaItem> = {
   data: readonly T[];
   renderOverlay?: (info: RenderOverlayInfo<T>) => ReactNode;
@@ -179,6 +200,11 @@ export type InfiniteMediaFeedProps<T extends InfiniteMediaItem = InfiniteMediaIt
    * skipped with a warning when they aren't installed.
    */
   scrubber?: boolean | ScrubberOptions;
+  /**
+   * Hold anywhere on the feed to speed playback up, release to go back. `true` uses the
+   * defaults. Needs react-native-gesture-handler, and is skipped with a warning without it.
+   */
+  speed?: boolean | SpeedOptions;
   /** Pages from the end that trigger onEndReached. Default 3. */
   onEndReachedThreshold?: number;
   onIndexChange?: (event: IndexChangeEvent<T>) => void;
@@ -190,6 +216,7 @@ export type InfiniteMediaFeedProps<T extends InfiniteMediaItem = InfiniteMediaIt
   /** The user scrubbed to a new position. */
   onSeek?: (event: SeekEvent) => void;
   /** The scrubber took the touch. Good moment to fade overlays out. */
+  onRateChange?: (event: { rate: number }) => void;
   onScrubStart?: (event: { itemId: string }) => void;
   onScrubEnd?: (event: SeekEvent) => void;
   onMetrics?: (metrics: InfiniteMediaMetrics) => void;
@@ -202,6 +229,8 @@ export type InfiniteMediaFeedRef = {
   play(): void;
   pause(): void;
   seekTo(seconds: number): void;
+  /** 1 is normal. Eases over `rampMs`, default 150. */
+  setRate(rate: number, rampMs?: number): void;
   setMuted(muted: boolean): void;
   scrollToIndex(index: number, animated?: boolean): void;
   /** Restarts the active item after an error, with a fresh retry budget. */

@@ -108,6 +108,10 @@ class ExpoInfiniteMediaModule : Module() {
       Function("seekTo") { s: FeedSession, seconds: Double, precise: Boolean? ->
         onMain { s.seekTo(seconds, precise ?: true) }
       }
+
+      Function("setRate") { s: FeedSession, rate: Double, rampMs: Int? ->
+        onMain { s.setRate(rate, rampMs ?: 150) }
+      }
       Function("setMuted") { s: FeedSession, muted: Boolean -> onMain { s.setMuted(muted) } }
       Function("retry") { s: FeedSession -> onMain { s.retry() } }
     }

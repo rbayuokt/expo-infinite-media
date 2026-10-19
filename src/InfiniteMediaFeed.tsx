@@ -4,6 +4,7 @@ import {
   createElement,
   memo,
   useEffect,
+  useCallback,
   useImperativeHandle,
   useLayoutEffect,
   useMemo,
@@ -12,7 +13,7 @@ import {
   type ReactNode,
   type Ref,
 } from 'react';
-import { ScrollView, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 
 import Native, { toNativeItem, type FeedSession, type NativeItem } from './ExpoInfiniteMediaModule';
 import { MediaSlotView } from './MediaSlotView';
@@ -26,6 +27,7 @@ import type {
   RenderOverlayInfo,
   ResizeMode,
   ScrubberOptions,
+  SpeedOptions,
 } from './types';
 
 type ScrubberComponent = typeof import('./scrubber/MediaScrubber').MediaScrubber;
@@ -44,6 +46,37 @@ function loadScrubber(): ScrubberComponent | null {
     );
   }
   return scrubberModule;
+}
+
+type HoldToSpeedComponent = typeof import('./speed/HoldToSpeed').HoldToSpeed;
+
+let speedModule: HoldToSpeedComponent | null | undefined;
+
+/** Loaded on demand: apps that don't use it don't need Gesture Handler. */
+function loadHoldToSpeed(): HoldToSpeedComponent | null {
+  if (speedModule !== undefined) return speedModule;
+  try {
+    speedModule = require('./speed/HoldToSpeed').HoldToSpeed as HoldToSpeedComponent;
+  } catch {
+    speedModule = null;
+    console.warn(
+      '[expo-infinite-media] the speed prop needs react-native-gesture-handler. Install it, or drop the prop.'
+    );
+  }
+  return speedModule;
+}
+
+type SpeedLayerProps = {
+  options: SpeedOptions;
+  onRate: (rate: number, rampMs: number) => void;
+  onHeld: (held: boolean) => void;
+  children: ReactNode;
+};
+
+function SpeedLayer({ options, onRate, onHeld, children }: SpeedLayerProps) {
+  const Hold = loadHoldToSpeed();
+  if (!Hold) return children;
+  return createElement(Hold, { options, onRate, onHeld, children });
 }
 
 type ScrubberLayerProps = {
@@ -135,6 +168,8 @@ export function InfiniteMediaFeed<T extends InfiniteMediaItem>(
     diagnostics = false,
     onEndReachedThreshold = 3,
     scrubber,
+    speed,
+    onRateChange,
     style,
     backgroundColor = '#000',
     ref,
@@ -156,6 +191,11 @@ export function InfiniteMediaFeed<T extends InfiniteMediaItem>(
     () => (scrubber ? (scrubber === true ? {} : scrubber) : null),
     [scrubber]
   );
+  const speedOptions: SpeedOptions | null = useMemo(
+    () => (speed ? (speed === true ? {} : speed) : null),
+    [speed]
+  );
+  const [heldFast, setHeldFast] = useState(false);
   const progressStore = useMemo(() => createProgressStore(), []);
   const wasPlaying = useRef(false);
   const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -283,6 +323,7 @@ export function InfiniteMediaFeed<T extends InfiniteMediaItem>(
       play: () => session.play(),
       pause: () => session.pause(),
       seekTo: (seconds) => session.seekTo(seconds),
+      setRate: (rate, rampMs) => session.setRate(rate, rampMs),
       setMuted: (value) => session.setMuted(value),
       retry: () => session.retry(),
       scrollToIndex: (target, animated = true) => {
@@ -324,6 +365,52 @@ export function InfiniteMediaFeed<T extends InfiniteMediaItem>(
       : { width: size.width, height: count * size.height }
     : undefined;
 
+  const pager = size ? (
+    <ScrollView
+      ref={scrollRef}
+      horizontal={horizontal}
+      pagingEnabled
+      disableIntervalMomentum
+      decelerationRate="fast"
+      showsVerticalScrollIndicator={false}
+      showsHorizontalScrollIndicator={false}
+      scrollsToTop={false}
+      overScrollMode="never"
+      // iOS otherwise adds a safe-area inset here, which shifts every snap point and
+      // leaves a strip of the next page showing.
+      contentInsetAdjustmentBehavior="never"
+      automaticallyAdjustContentInsets={false}
+      onScrollBeginDrag={() => setScrolling(true)}
+      onScrollEndDrag={() => setScrolling(false)}
+      onMomentumScrollBegin={() => setScrolling(true)}
+      onMomentumScrollEnd={() => setScrolling(false)}
+      contentOffset={initialOffset}
+      contentContainerStyle={contentSize}
+      style={StyleSheet.absoluteFill}>
+      {pages.map((i) => (
+        <Page
+          key={data[i].id}
+          item={data[i]}
+          index={i}
+          isActive={i === index}
+          size={size}
+          horizontal={horizontal}
+          session={session}
+          resizeMode={resizeMode}
+          renderOverlay={renderOverlay}
+        />
+      ))}
+    </ScrollView>
+  ) : null;
+
+  const applyRate = useCallback(
+    (rate: number, rampMs: number) => {
+      session.setRate(rate, rampMs);
+      onRateChange?.({ rate });
+    },
+    [session, onRateChange]
+  );
+
   return (
     <View style={[styles.root, { backgroundColor }, style]} onLayout={onLayout}>
       {scrubberOptions ? (
@@ -349,43 +436,39 @@ export function InfiniteMediaFeed<T extends InfiniteMediaItem>(
           }}
         />
       ) : null}
-      {size ? (
-        <ScrollView
-          ref={scrollRef}
-          horizontal={horizontal}
-          pagingEnabled
-          disableIntervalMomentum
-          decelerationRate="fast"
-          showsVerticalScrollIndicator={false}
-          showsHorizontalScrollIndicator={false}
-          scrollsToTop={false}
-          overScrollMode="never"
-          // iOS otherwise adds a safe-area inset here, which shifts every snap point and
-          // leaves a strip of the next page showing.
-          contentInsetAdjustmentBehavior="never"
-          automaticallyAdjustContentInsets={false}
-          onScrollBeginDrag={() => setScrolling(true)}
-          onScrollEndDrag={() => setScrolling(false)}
-          onMomentumScrollBegin={() => setScrolling(true)}
-          onMomentumScrollEnd={() => setScrolling(false)}
-          contentOffset={initialOffset}
-          contentContainerStyle={contentSize}
-          style={StyleSheet.absoluteFill}>
-          {pages.map((i) => (
-            <Page
-              key={data[i].id}
-              item={data[i]}
-              index={i}
-              isActive={i === index}
-              size={size}
-              horizontal={horizontal}
-              session={session}
-              resizeMode={resizeMode}
-              renderOverlay={renderOverlay}
-            />
-          ))}
-        </ScrollView>
-      ) : null}
+      {speedOptions && heldFast && (speedOptions.showIndicator ?? true)
+        ? (() => {
+            const fast = speedOptions.rate ?? 2;
+            const place =
+              speedOptions.top != null
+                ? { top: speedOptions.top }
+                : speedOptions.bottom != null
+                  ? { bottom: speedOptions.bottom }
+                  : scrubberOptions?.top != null
+                    ? { top: scrubberOptions.top + 22 }
+                    : { bottom: Math.max(8, (scrubberOptions?.bottom ?? 24) - 18) };
+            return (
+              <View pointerEvents="none" style={[styles.speedIndicator, place]}>
+                {speedOptions.renderIndicator ? (
+                  speedOptions.renderIndicator(fast)
+                ) : (
+                  <View style={[styles.speedPill, speedOptions.indicatorStyle]}>
+                    <Text style={[styles.speedText, speedOptions.indicatorTextStyle]}>
+                      {(speedOptions.label ?? ((r: number) => `${r}x`))(fast)}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            );
+          })()
+        : null}
+      {speedOptions ? (
+        <SpeedLayer options={speedOptions} onRate={applyRate} onHeld={setHeldFast}>
+          {pager}
+        </SpeedLayer>
+      ) : (
+        pager
+      )}
     </View>
   );
 }
@@ -395,4 +478,12 @@ const styles = StyleSheet.create({
   page: { position: 'absolute' },
   // Above the pages, so the bar keeps its touches while the feed scrolls.
   scrubber: { position: 'absolute', zIndex: 2 },
+  speedIndicator: { position: 'absolute', left: 0, right: 0, alignItems: 'center', zIndex: 3 },
+  speedPill: {
+    paddingHorizontal: 14,
+    paddingVertical: 5,
+    borderRadius: 999,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+  },
+  speedText: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
 });

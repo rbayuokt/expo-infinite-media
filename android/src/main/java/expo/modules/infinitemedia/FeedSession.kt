@@ -140,6 +140,10 @@ class FeedSession(appContext: AppContext) : SharedObject(appContext) {
    * Exact seeks decode from the previous keyframe, too much work to repeat while a finger is
    * dragging, so scrubbing asks for the nearest sync point instead.
    */
+  internal fun setRate(rate: Double, rampMs: Int) {
+    current()?.setRate(rate.toFloat(), rampMs)
+  }
+
   internal fun seekTo(seconds: Double, precise: Boolean) {
     val player = current()?.player ?: return
     player.setSeekParameters(if (precise) SeekParameters.EXACT else SeekParameters.CLOSEST_SYNC)
