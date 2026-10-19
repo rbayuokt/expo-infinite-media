@@ -137,6 +137,13 @@ class ExpoInfiniteMediaModule : Module() {
       }
       return
     }
+    item.poster?.let { poster ->
+      withContext(Dispatchers.Main) {
+        Coordinator.images.prefetch(
+          "preload-poster:${item.id}", poster, item.posterCacheKey, item.headers, false, 0, 0
+        )
+      }
+    }
     // Streams aren't byte-range cached, the player warms them when they get close.
     if (!item.isProgressive) return
     withContext(Dispatchers.IO) {

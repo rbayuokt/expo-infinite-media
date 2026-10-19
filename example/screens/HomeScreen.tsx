@@ -1,6 +1,10 @@
+import React, { useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { InfiniteMedia } from '@rbayuokt/expo-infinite-media';
+import { makePage } from '../data/media';
 
 import type { IconName } from '../components/icons';
 import { color, eyebrow, radius } from '../theme';
@@ -25,6 +29,11 @@ function Tile({ icon, accent, title, body, onPress }: { icon: IconName; accent: 
 
 export function HomeScreen({ onOpen }: { onOpen: (route: Route) => void }) {
   const insets = useSafeAreaInsets();
+
+  useEffect(() => {
+    InfiniteMedia.preload(makePage(0, 3)).catch(() => {});
+  }, []);
+
   return (
     <ScrollView
       style={styles.root}

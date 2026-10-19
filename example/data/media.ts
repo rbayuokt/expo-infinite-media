@@ -29,7 +29,7 @@ const CAPTIONS = [
 ];
 
 const mixkit = (id: string, q: 720 | 1080) => `https://assets.mixkit.co/videos/${id}/${id}-${q}.mp4`;
-const poster = (id: string) => `https://assets.mixkit.co/videos/${id}/${id}-thumb-720-0.jpg`;
+const poster = (id: string) => `https://assets.mixkit.co/videos/${id}/${id}-thumb-360-0.jpg`;
 
 /** Deterministic item for any index, so 1000+ items cost nothing to generate. */
 export function makeItem(index: number, prefix = 'feed'): FeedItem {

@@ -71,7 +71,17 @@ class MediaSlotView(context: Context, appContext: AppContext) : ExpoView(context
   }
 
   internal fun showCover(show: Boolean) {
-    imageView.visibility = if (show) VISIBLE else GONE
+    imageView.animate().cancel()
+    if (show) {
+      imageView.alpha = 1f
+      imageView.visibility = VISIBLE
+      return
+    }
+    if (imageView.visibility != VISIBLE) return
+    imageView.animate().alpha(0f).setDuration(COVER_FADE_MS).withEndAction {
+      imageView.visibility = GONE
+      imageView.alpha = 1f
+    }
   }
 
   override fun onAttachedToWindow() {
@@ -111,5 +121,9 @@ class MediaSlotView(context: Context, appContext: AppContext) : ExpoView(context
     val viewAspect = w.toFloat() / h
     val fitWidth = if (resizeMode == "contain") videoAspect > viewAspect else videoAspect < viewAspect
     return if (fitWidth) w to (w / videoAspect).toInt() else (h * videoAspect).toInt() to h
+  }
+
+  private companion object {
+    const val COVER_FADE_MS = 120L
   }
 }

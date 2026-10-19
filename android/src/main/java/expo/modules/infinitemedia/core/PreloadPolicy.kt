@@ -81,7 +81,8 @@ object PreloadPolicy {
       when (k) {
         1 -> when {
           unhealthy -> add(i, Priority.P1, VideoAction.POSTER, ImageAction.NONE)
-          flinging || constrained -> add(i, Priority.P1, VideoAction.STARTUP, ImageAction.FETCH)
+          flinging || input.memory == MemoryLevel.PRESSURE || input.network == NetworkKind.CONSTRAINED ->
+            add(i, Priority.P1, VideoAction.STARTUP, ImageAction.FETCH)
           else -> add(i, Priority.P1, VideoAction.PREPARE, ImageAction.DECODE)
         }
         2 -> {
@@ -100,7 +101,8 @@ object PreloadPolicy {
     }
 
     if (input.behind > 0 && !flinging) {
-      val warmPrev = input.tier == DeviceTier.HIGH && input.memory == MemoryLevel.NORMAL && !unhealthy
+      val warmPrev = input.tier != DeviceTier.LOW && input.memory == MemoryLevel.NORMAL &&
+        !unhealthy && input.network != NetworkKind.CONSTRAINED
       add(
         current - dir,
         Priority.P3,
