@@ -5,7 +5,8 @@
 # expo-infinite-media
 
 <p align="center">
-  <img src="docs/demo.gif" alt="The same feed on Android and iOS side by side: the benchmark run, five layout presets, and HLS streaming" width="640" />
+  <img src="docs/demo.gif" alt="The same feed on Android and iOS side by side: the benchmark run, five layout presets, and HLS streaming" width="520" />
+  <img src="docs/stress-web.gif" alt="The Stress screen in Chrome going from slow to fast to burst auto swiping and back, with the live counters on screen" width="236" />
 </p>
 
 A native paged media feed for Expo and React Native CLI apps. Videos and photos in one
@@ -28,7 +29,7 @@ What that means when you use it:
 In an Expo app:
 
 ```bash
-npx expo install @rbayuokt/expo-infinite-media
+npx expo install @rbayuokt/expo-infinite-media@latest
 npx expo prebuild
 ```
 
@@ -41,7 +42,7 @@ else about your project has to change, and there is no Expo runtime to adopt:
 
 ```bash
 npx install-expo-modules@latest
-npm install @rbayuokt/expo-infinite-media
+npm install @rbayuokt/expo-infinite-media@latest
 npx pod-install
 ```
 
@@ -55,7 +56,7 @@ library works and the scrubber is skipped with a warning.
 | React Native | 0.83, New Architecture. Expo or the React Native CLI |
 | iOS          | 15.1                                                 |
 | Android      | API 24                                               |
-| Web          | Not supported. Calls throw `UNSUPPORTED_PLATFORM`    |
+| Web          | Chrome, Safari and Firefox. See Web below            |
 
 ## Usage
 
@@ -147,6 +148,7 @@ can never delete a file out from under the player. Full details in
 | Video cache on Android | Media3 `SimpleCache` with an LRU evictor, written through a custom source   |
 | Images on iOS          | ImageIO downsampling into an `NSCache`                                      |
 | Images on Android      | Coil 3.2.0                                                                  |
+| Web                    | Pooled `<video>`, CSS scroll snap and `IntersectionObserver`                |
 | Environment            | `NWPathMonitor` on iOS, `ConnectivityManager` and `PowerManager` on Android |
 | Bridge                 | Expo Modules API, a `SharedObject` session and a Fabric view per page       |
 | Seek bar               | Reanimated 4 and Gesture Handler, both optional                             |
@@ -160,8 +162,8 @@ them and off the JS thread entirely.
 
 ## Benchmarks
 
-Measured on real phones, not estimated. Anything not listed here has not been run on
-hardware yet.
+Measured on real hardware, not estimated. Two phones and one browser. Anything not listed
+here has not been run yet.
 
 **The verdict: solid.** Each phone went through a 1200 post feed for a minute, a new post
 every 3 seconds. In all of that the video froze once, for half a second, on the iPhone, on
@@ -171,17 +173,27 @@ posts or 1200, so nothing got worse as the list grew. That first minute download
 Android and 107 MB on iPhone. Swipe through again while the cache is still full and Android
 spends 4.4 MB, the iPhone nothing at all.
 
-What the verdict does not cover: two mid range phones on Wi-Fi, and a sample feed that
-reuses about 30 source files. A slow connection, a cheaper phone or a catalogue where every
-post is a different file will all read worse than this.
+The browser run is the same minute in Chrome. Warm, it lands on a frame in 1 ms and stalls
+for 14 ms in the whole minute. Cold, the p90 is 116 ms, the early posts arriving before
+their video had data, because a page buffers on the browser's schedule rather than on a
+preload manager's.
+
+What the verdict does not cover: two mid range phones on Wi-Fi, a laptop browser, and a
+sample feed that reuses about 30 source files. A slow connection, a cheaper phone or a
+catalogue where every post is a different file will all read worse than this.
 
 <p align="center">
-  <img src="docs/benchmark.png" alt="Time to first frame, stall time and network traffic for Android and iOS, cold and warm cache" width="780" />
+  <img src="docs/benchmark.png" alt="Time to first frame, stall time and network traffic for Android, iOS and the web, cold and warm cache" width="780" />
 </p>
 
 The run is the example's Stress screen with the **Benchmark** button, muted, on release
 builds with no debugger attached and both phones on the same Wi-Fi. Photos come from a CDN
 at 1080x1920 WebP, videos from Mixkit.
+
+The clip at the top of this page is that same screen in Chrome, 25 seconds of slow, fast,
+burst, fast and slow again. Burst jumps between posts 180 ms apart across the 1200 item
+list, including jumps to 500 and 1000. Three players, no errors, and the counters keep
+reporting throughout.
 
 **OPPO Reno5 F (CPH2217), Android 13.** Mid tier by the library's own check.
 
@@ -196,6 +208,17 @@ at 1080x1920 WebP, videos from Mixkit.
 | --------------------- | ------------ | -------------- | ---------- | ---------- | ------------- | ------ | ------------------ |
 | Cold (caches cleared) | 13           | 0 / 5 ms       | 1 (494 ms) | 96%        | 106.8 MB      | 0.0 MB | 2 / 5              |
 | Warm                  | 13           | 0 / 0 ms       | 0          | 100%       | 0.0 MB        | 0.0 MB | 2 / 5              |
+
+**Chrome 155 on an M3 Pro MacBook Pro, macOS 27.** A laptop, so this says what the web path
+costs, not how a browser compares to a phone.
+
+| Cache                | First frames | TTFF p50 / p90 | Rebuffers  | Cache hits | Long frames     | Players / surfaces |
+| -------------------- | ------------ | -------------- | ---------- | ---------- | --------------- | ------------------ |
+| Cold (fresh profile) | 14           | 1 / 116 ms     | 3 (154 ms) | 29%        | 13, worst 51 ms | 3 / 2              |
+| Warm                 | 13           | 1 / 1 ms       | 1 (14 ms)  | 100%       | 14, worst 42 ms | 3 / 2              |
+
+Long frames are the ones the page took more than 32 ms to produce, out of roughly 7900 in
+the minute on a 120 Hz display. Bytes are missing from that table on purpose, see below.
 
 Posts arrive with a frame already on screen on both, and no run dropped a frame. Cold
 traffic is close enough between the two platforms to call it the cost of the media rather
@@ -225,6 +248,17 @@ How to read this, including the parts that flatter the library:
   platform's cold number with its own warm number, not with the other column.
 - **The hit rate is optimistic either way.** The sample feed cycles through about 30 source
   files, so it re-fetches the same media. A real catalogue with unique posts will be lower.
+- **A page cannot measure its own traffic.** A cross origin response without
+  `Timing-Allow-Origin` reports every size as zero, and most CDNs do not send that header,
+  so the web run counts only the media that allows timing. That subset is what its cache
+  hit column is about, and it is why the row carries no bytes.
+- **The web path has no preload manager.** Three `<video>` elements with `preload="auto"`
+  do their own buffering and the browser decides when. That is the 116 ms at p90 on the
+  cold run against single digits on the phones, and it falls to 1 ms once the files are in
+  the HTTP cache.
+- **Every platform counts the same way.** Startup is timed from the post becoming current,
+  and a stall only counts on the post you are watching. A neighbour filling its buffer in
+  the background is not timed and is not a stall, on a phone or in a browser.
 - **Cold bytes are higher than they need to be.** The same URL appearing under two item ids
   is cached twice, because the cache key defaults to the item id. Feeds that repeat a URL
   can pass an explicit `cacheKey` and skip that.
@@ -554,6 +588,41 @@ The library doesn't decode anything itself. Whatever the platform player support
 - **DASH:** not supported on iOS, and the Media3 DASH module isn't bundled on Android.
 - **Images:** anything ImageIO (iOS) or Coil and `BitmapFactory` (Android) can decode:
   JPEG, PNG, WebP, and HEIC on devices that support it.
+
+## Web
+
+The same import works in a browser. `InfiniteMediaFeed` resolves to a web build with the
+same props, the same ref and the same callbacks, with the browser doing the jobs native
+code does on a phone.
+
+- **Paging is CSS scroll snap**, vertical by default and horizontal with `horizontal`. The
+  browser scrolls, an `IntersectionObserver` reports which page is on screen, and no scroll
+  handler runs in JS.
+- **Three `<video>` elements serve a list of any length**, current, next and previous, the
+  same window the native policy keeps warm. Pages outside it are empty divs.
+- **The seek bar is a DOM bar** driven by `requestAnimationFrame`, because Reanimated's
+  frame callback does not run on the web. Hold to speed up uses pointer events. Both read
+  the same options as on a phone.
+- **Per item `headers` are ignored.** A `<video src>` cannot carry them, so signed URLs or
+  a query token are the way to protect media on the web.
+- **The cache is the browser's.** `preload` warms posters, while `clearCache`,
+  `removeFromCache` and `getCacheSize` resolve without doing anything, since a page cannot
+  reach the HTTP cache.
+- **Sound needs a gesture.** Browsers refuse to autoplay with sound until the page has been
+  touched. The feed asks for sound, falls back to a muted start so the video still moves,
+  and turns the sound on at the first pointer down.
+- **`diagnostics` still emits `onMetrics`** every 2 s. Startup times, rebuffers, the
+  decoder's dropped frames and the player counts are real numbers. The byte and disk fields
+  stay at zero, see Benchmarks for why.
+
+A phone sized feed in a desktop window wants a column, which is a style, not a prop:
+
+```tsx
+<InfiniteMediaFeed
+  data={items}
+  style={Platform.OS === 'web' ? { alignSelf: 'center', width: '100%', maxWidth: 460 } : undefined}
+/>
+```
 
 ## Limits worth knowing
 
